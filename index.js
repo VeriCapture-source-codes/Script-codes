@@ -1,10 +1,9 @@
-//Script for the signup form validation and submission
 document.addEventListener("DOMContentLoaded", function () {
   const form = document.querySelector(".form2");
   const firstName = document.getElementById("first-name");
   const lastName = document.getElementById("last-name");
   const email = document.querySelector("input[type='email']");
-  const username = document.querySelector("input[type='usename']");
+  const username = document.querySelector("input[type='text']"); // Fixed selector
   const password = document.getElementById("password2");
   const country = document.querySelector(".select-box2 select");
   const termsCheckbox = document.getElementById("checkbox2");
@@ -28,14 +27,12 @@ document.addEventListener("DOMContentLoaded", function () {
     return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/.test(password);
   }
 
+  // Toggle password visibility
   passwordToggle.addEventListener("click", function () {
-    if (password.type === "password") {
-      password.type = "text";
-    } else {
-      password.type = "password";
-    }
+    password.type = password.type === "password" ? "text" : "password";
   });
 
+  // Form submission with validation
   form.addEventListener("submit", async function (e) {
     e.preventDefault();
     let valid = true;
@@ -51,7 +48,7 @@ document.addEventListener("DOMContentLoaded", function () {
     } else clearError(lastName);
 
     if (!validateEmail(email.value)) {
-      showError(email, "Enter a valid email");
+      showError(email, "Enter a valid email address");
       valid = false;
     } else clearError(email);
 
@@ -71,39 +68,39 @@ document.addEventListener("DOMContentLoaded", function () {
     } else clearError(country);
 
     if (!termsCheckbox.checked) {
-      alert("You must agree to the terms and conditions");
+      showError(termsCheckbox, "You must accept the terms and conditions");
       valid = false;
-    }
+    } else clearError(termsCheckbox);
 
-    if (valid) {
-      const formData = {
-        firstName: firstName.value.trim(),
-        lastName: lastName.value.trim(),
-        email: email.value.trim(),
-        username: username.value.trim(),
-        password: password.value.trim(),
-        country: country.value.trim()
-      };
+    if (!valid) return;
 
-      try {
-        const response = await fetch(apiUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          localStorage.setItem("user", JSON.stringify(data));
-          alert("Account created successfully!");
-          form.reset();
-        } else {
-          const errorData = await response.json();
-          alert("Error: " + (errorData.message || "Something went wrong"));
-        }
-      } catch (error) {
-        alert("Network error, please try again later");
+    // Prepare form data
+    const formData = {
+      firstName: firstName.value.trim(),
+      lastName: lastName.value.trim(),
+      email: email.value.trim(),
+      username: username.value.trim(),
+      password: password.value.trim(),
+      country: country.value,
+    };
+
+    // Submit data to API
+    try {
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        alert("Signup successful!");
+        form.reset();
+      } else {
+        alert("Error: " + (result.message || "Signup failed"));
       }
+    } catch (error) {
+      alert("Network error: Could not reach the server");
     }
   });
 });
