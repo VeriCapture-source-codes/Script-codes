@@ -1,7 +1,6 @@
-//Script for login.html
 document.addEventListener("DOMContentLoaded", function () {
   const form = document.querySelector("form");
-  const emailOrUsername = document.querySelector("input[type='email']");
+  const emailOrUsername = document.getElementById("emailOrUsername"); // FIXED
   const password = document.getElementById("password");
   const passwordToggle = document.getElementById("bx-hide");
   const keepSignedIn = document.getElementById("checkbox");
@@ -9,40 +8,48 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function showError(input, message) {
     input.style.border = "2px solid red";
-    alert(message);
+    const errorMsg = document.createElement("small");
+    errorMsg.textContent = message;
+    errorMsg.style.color = "red";
+    errorMsg.classList.add("error-message");
+    if (!input.nextElementSibling || !input.nextElementSibling.classList.contains("error-message")) {
+      input.insertAdjacentElement("afterend", errorMsg);
+    }
   }
 
   function clearError(input) {
     input.style.border = "1px solid #ccc";
+    if (input.nextElementSibling && input.nextElementSibling.classList.contains("error-message")) {
+      input.nextElementSibling.remove();
+    }
   }
 
   function validateEmailOrUsername(value) {
-    return value.trim().length > 0;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(value) || value.trim().length >= 3; // Accepts either valid email or min 3-char username
   }
 
   function validatePassword(value) {
     return value.length >= 6;
   }
 
+  // Toggle password visibility
   passwordToggle.addEventListener("click", function () {
-    if (password.type === "password") {
-      password.type = "text";
-    } else {
-      password.type = "password";
-    }
+    password.type = password.type === "password" ? "text" : "password";
   });
 
+  // Form submission
   form.addEventListener("submit", async function (e) {
     e.preventDefault();
     let valid = true;
 
     if (!validateEmailOrUsername(emailOrUsername.value)) {
-      showError(emailOrUsername, "Email or Username is required");
+      showError(emailOrUsername, "Enter a valid email or username (min 3 characters)");
       valid = false;
     } else clearError(emailOrUsername);
 
     if (!validatePassword(password.value)) {
-      showError(password, "Password must be at least 6 characters");
+      showError(password, "Password must be at least 6 characters long");
       valid = false;
     } else clearError(password);
 
@@ -67,7 +74,7 @@ document.addEventListener("DOMContentLoaded", function () {
           window.location.href = "dashboard.html"; 
         } else {
           const errorData = await response.json();
-          alert("Error: " + (errorData.message || "Invalid credentials"));
+          showError(emailOrUsername, errorData.message || "Invalid credentials");
         }
       } catch (error) {
         alert("Network error, please try again later");
